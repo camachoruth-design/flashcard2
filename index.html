@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SecurePass • Gerador de Senhas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+        
+        .password-display {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .strength-bar {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-zinc-950 text-zinc-200 min-h-screen">
+    <div class="max-w-2xl mx-auto px-6 py-12">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-emerald-500 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-emerald-500/30">
+                    🔐
+                </div>
+                <div>
+                    <h1 class="text-3xl font-bold tracking-tight">SecurePass</h1>
+                    <p class="text-emerald-400 text-sm font-medium">Gerador de senhas seguro</p>
+                </div>
+            </div>
+            <a href="#" onclick="window.location.reload()" 
+               class="text-zinc-400 hover:text-white transition-colors flex items-center gap-2 text-sm">
+                <i class="fas fa-redo"></i>
+                <span>Nova sessão</span>
+            </a>
+        </div>
+
+        <!-- Main Card -->
+        <div class="bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-800 p-8">
+            <!-- Password Display -->
+            <div class="mb-8">
+                <div id="passwordContainer" 
+                     class="password-display bg-zinc-950 border border-zinc-700 rounded-2xl px-6 py-5 text-3xl font-medium tracking-wider text-center break-all min-h-[80px] flex items-center justify-center select-all cursor-pointer hover:border-emerald-500 transition-colors"
+                     onclick="copyPassword()">
+                    Clique em "Gerar Senha"
+                </div>
+                
+                <div class="flex items-center justify-between mt-3">
+                    <div id="strengthContainer" class="flex items-center gap-3">
+                        <div class="text-sm font-medium text-zinc-400">Força:</div>
+                        <div id="strengthBar" class="h-2 w-48 bg-zinc-800 rounded-full overflow-hidden">
+                            <div id="strengthFill" class="strength-bar h-full w-1/3 bg-red-500 rounded-full"></div>
+                        </div>
+                        <span id="strengthText" class="text-sm font-semibold text-red-400">Fraca</span>
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="copyPassword()" 
+                                class="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-5 py-2.5 rounded-2xl transition-colors text-sm font-medium">
+                            <i class="fas fa-copy"></i>
+                            Copiar
+                        </button>
+                        <button onclick="generatePassword()" 
+                                class="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 px-6 py-2.5 rounded-2xl transition-all font-semibold shadow-lg shadow-emerald-600/30">
+                            <i class="fas fa-dice"></i>
+                            Gerar Nova
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Options -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Length -->
+                <div>
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-zinc-300 font-medium">Comprimento da senha</label>
+                        <span id="lengthValue" class="text-3xl font-bold text-emerald-400 tabular-nums">16</span>
+                    </div>
+                    <input type="range" id="lengthSlider" 
+                           min="8" max="128" value="16"
+                           oninput="updateLength(this.value)"
+                           class="w-full accent-emerald-500">
+                    <div class="flex justify-between text-xs text-zinc-500 mt-1">
+                        <span>8</span>
+                        <span>128</span>
+                    </div>
+                </div>
+
+                <!-- Character Types -->
+                <div>
+                    <p class="text-zinc-300 font-medium mb-4">Incluir caracteres:</p>
+                    <div class="space-y-3">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="lowercase" checked class="w-5 h-5 accent-emerald-500">
+                            <span class="text-zinc-300">Letras minúsculas (a-z)</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="uppercase" checked class="w-5 h-5 accent-emerald-500">
+                            <span class="text-zinc-300">Letras maiúsculas (A-Z)</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="numbers" checked class="w-5 h-5 accent-emerald-500">
+                            <span class="text-zinc-300">Números (0-9)</span>
+                        </label>
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" id="symbols" checked class="w-5 h-5 accent-emerald-500">
+                            <span class="text-zinc-300">Símbolos (!@#$% etc.)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Options -->
+            <div class="mt-8 pt-8 border-t border-zinc-800">
+                <div class="flex items-center gap-2 mb-4">
+                    <i class="fas fa-shield-alt text-emerald-400"></i>
+                    <h3 class="font-semibold">Opções avançadas de segurança</h3>
+                </div>
+                <div class="grid grid-cols-1 gap-3">
+                    <label class="flex items-center gap-3 cursor-pointer bg-zinc-950 hover:bg-zinc-900 p-4 rounded-2xl transition-colors border border-transparent hover:border-zinc-700">
+                        <input type="checkbox" id="avoidAmbiguous" class="w-5 h-5 accent-emerald-500">
+                        <div>
+                            <div class="font-medium">Evitar caracteres ambíguos</div>
+                            <div class="text-xs text-zinc-400">Ex: 0 O o 1 l I</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Generate Button -->
+            <button onclick="generatePassword()" 
+                    class="mt-10 w-full bg-white text-zinc-950 hover:bg-emerald-400 py-4 rounded-3xl font-bold text-lg flex items-center justify-center gap-3 transition-all active:scale-[0.97]">
+                <i class="fas fa-magic"></i>
+                GERAR SENHA SEGURA
+            </button>
+        </div>
+
+        <!-- Security Tips -->
+        <div class="mt-12 text-zinc-400 text-sm">
+            <div class="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-6">
+                <h3 class="font-semibold text-emerald-400 mb-4 flex items-center gap-2">
+                    <i class="fas fa-info-circle"></i>
+                    Boas práticas de segurança
+                </h3>
+                <ul class="space-y-3 text-sm">
+                    <li class="flex gap-3">
+                        <span class="text-emerald-400 mt-0.5">•</span>
+                        <span>Use senhas únicas para cada conta</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-emerald-400 mt-0.5">•</span>
+                        <span>Recomendamos um gerenciador de senhas (Bitwarden, 1Password, etc.)</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-emerald-400 mt-0.5">•</span>
+                        <span>Ative autenticação de dois fatores (2FA) sempre que possível</span>
+                    </li>
+                    <li class="flex gap-3">
+                        <span class="text-emerald-400 mt-0.5">•</span>
+                        <span>Esta ferramenta funciona 100% no seu navegador — nenhuma senha sai do seu dispositivo</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-zinc-500 text-xs mt-16">
+            <p>Gerado com ❤️ usando criptografia segura do navegador (Crypto API)</p>
+            <p class="mt-1">Código aberto • Seguro por design</p>
+        </div>
+    </div>
+
+    <script>
+        // Character sets
+        const charSets = {
+            lowercase: 'abcdefghijklmnopqrstuvwxyz',
+            uppercase: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+            numbers: '0123456789',
+            symbols: '!@#$%^&*()_+-=[]{}|;:,.<>/?'
+        };
+
+        const ambiguousChars = '0O1lI';
+
+        function getSecureRandom(max) {
+            const array = new Uint32Array(1);
+            window.crypto.getRandomValues(array);
+            return array[0] % max;
+        }
+
+        function generatePassword() {
+            const length = parseInt(document.getElementById('lengthSlider').value);
+            const useLower = document.getElementById('lowercase').checked;
+            const useUpper = document.getElementById('uppercase').checked;
+            const useNumbers = document.getElementById('numbers').checked;
+            const useSymbols = document.getElementById('symbols').checked;
+            const avoidAmbiguous = document.getElementById('avoidAmbiguous').checked;
+
+            let chars = '';
+            if (useLower) chars += charSets.lowercase;
+            if (useUpper) chars += charSets.uppercase;
+            if (useNumbers) chars += charSets.numbers;
+            if (useSymbols) chars += charSets.symbols;
+
+            if (!chars) {
+                alert("Selecione pelo menos um tipo de caractere!");
+                return;
+            }
+
+            let password = '';
+            let hasLower = false, hasUpper = false, hasNum = false, hasSym = false;
+
+            // Garantir diversidade
+            while (password.length < length) {
+                const randomIndex = getSecureRandom(chars.length);
+                let char = chars[randomIndex];
+
+                if (avoidAmbiguous && ambiguousChars.includes(char)) {
+                    continue;
+                }
+
+                password += char;
+
+                // Track types
+                if (charSets.lowercase.includes(char)) hasLower = true;
+                if (charSets.uppercase.includes(char)) hasUpper = true;
+                if (charSets.numbers.includes(char)) hasNum = true;
+                if (charSets.symbols.includes(char)) hasSym = true;
+            }
+
+            // Shuffle password
+            password = password.split('').sort(() => 0.5 - Math.random()).join('');
+
+            // Display
+            const display = document.getElementById('passwordContainer');
+            display.textContent = password;
+            
+            // Update strength
+            updateStrength(password, length);
+        }
+
+        function updateLength(value) {
+            document.getElementById('lengthValue').textContent = value;
+        }
+
+        function updateStrength(password, length) {
+            let score = 0;
+            
+            if (length >= 12) score += 2;
+            if (length >= 16) score += 2;
+            
+            if (/[a-z]/.test(password)) score++;
+            if (/[A-Z]/.test(password)) score++;
+            if (/\d/.test(password)) score++;
+            if (/[^A-Za-z0-9]/.test(password)) score++;
+            
+            const fill = document.getElementById('strengthFill');
+            const text = document.getElementById('strengthText');
+            
+            if (score <= 3) {
+                fill.style.width = '30%';
+                fill.className = 'strength-bar h-full bg-red-500 rounded-full';
+                text.textContent = 'Fraca';
+                text.className = 'text-sm font-semibold text-red-400';
+            } else if (score <= 5) {
+                fill.style.width = '65%';
+                fill.className = 'strength-bar h-full bg-yellow-500 rounded-full';
+                text.textContent = 'Média';
+                text.className = 'text-sm font-semibold text-yellow-400';
+            } else {
+                fill.style.width = '100%';
+                fill.className = 'strength-bar h-full bg-emerald-500 rounded-full';
+                text.textContent = 'Forte';
+                text.className = 'text-sm font-semibold text-emerald-400';
+            }
+        }
+
+        function copyPassword() {
+            const display = document.getElementById('passwordContainer');
+            const password = display.textContent.trim();
+            
+            if (password === "Clique em \"Gerar Senha\"" || !password) {
+                return;
+            }
+            
+            navigator.clipboard.writeText(password).then(() => {
+                const original = display.textContent;
+                display.style.transition = 'all 0.2s';
+                display.style.color = '#10b981';
+                
+                setTimeout(() => {
+                    display.style.color = '';
+                }, 800);
+                
+                // Toast
+                showToast('Senha copiada com sucesso!');
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-2xl shadow-xl flex items-center gap-2 z-50';
+            toast.innerHTML = `
+                <i class="fas fa-check-circle"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+
+        // Inicialização
+        window.onload = function() {
+            // Tailwind script já carregado
+            generatePassword(); // Gera uma senha inicial
+            
+            // Suporte a tecla Enter
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    generatePassword();
+                }
+            });
+        };
+    </script>
+</body>
+</html>
